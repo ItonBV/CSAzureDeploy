@@ -1,0 +1,203 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "CustomerName": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 15,
+      "metadata": {
+        "description": "The long name (15 char max) for this customer. Used for prefixes on objects/resources"
+      }
+    },
+    "CustomerShort": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 6,
+      "metadata": {
+        "description": "The short name (6 char max) for this customer. Used for prefixes on objects/resources"
+      }
+    },
+    "VNetCIDR": {
+      "type": "string",
+      "defaultValue": "172.16.0.0/23",
+      "metadata": {
+        "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
+      }
+    },
+    "FWSubnetCIDR": {
+      "type": "string",
+      "defaultValue": "172.16.0.0/29",
+      "metadata": {
+        "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
+      }
+    },
+    "GWSubnetCIDR": {
+      "type": "string",
+      "defaultValue": "172.16.0.8/29",
+      "metadata": {
+        "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
+      }
+    },
+    "DMZSubnetCIDR": {
+      "type": "string",
+      "defaultValue": "172.16.0.128/25",
+      "metadata": {
+        "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
+      }
+    },
+    "LANSubnetCIDR": {
+      "type": "string",
+      "defaultValue": "172.16.1.0/24",
+      "metadata": {
+        "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
+      }
+    }
+  },
+  "variables": {
+    "VNetName": "[concat(parameters('CustomerShort'),'-CS-CD-VNet1')]",
+    "FWSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-FW')]",
+    "GWSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-GW')]",
+    "DMZSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-DMZ')]",
+    "LANSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-LAN')]",
+    "LanNsgName": "[concat(parameters('CustomerShort'),'-CS-CD-LAN-NSG')]",
+    "DmzNsgName": "[concat(parameters('CustomerShort'),'-CS-CD-DMZ-NSG')]"
+    },
+  "resources": [
+    {
+      "apiVersion": "2017-03-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('DmzNsgName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[variables('DmzNsgName')]"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "rdp-rule",
+            "properties": {
+              "description": "Allow RDP",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "web-rule",
+            "properties": {
+              "description": "Allow WEB",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 101,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-03-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('LanNsgName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[variables('LanNsgName')]"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "rdp-rule",
+            "properties": {
+              "description": "Allow RDP",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "web-rule",
+            "properties": {
+              "description": "Allow WEB",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 101,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('VNetName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('DmzNsgName'))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('LanNsgName'))]"
+      ],
+      "tags": {
+        "displayName": "Virtual network for [parameters('CustomerName')]"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('VNetCIDR')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('FWSubnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('FWSubnetCIDR')]"
+            }
+          },
+          {
+            "name": "[variables('GWSubnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('GWSubnetCIDR')]"
+            }
+          },
+          {
+            "name": "[variables('DMZSubnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('DMZSubnetCIDR')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('DmzNsgName'))]"
+              }
+            }
+          },
+          {
+            "name": "[variables('LANSubnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('LANSubnetCIDR')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('LanNsgName'))]"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {}
+}
