@@ -39,7 +39,8 @@
     },
     "AdminUserName": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "defaultValue": "vmadmin"
     },
     "AdminPassword": {
       "type": "securestring"
@@ -68,11 +69,11 @@
     }
   },
   "variables": {
-    "Name": "[concat('Name', uniqueString(resourceGroup().id))]",
+    "VMName": "[parameters('Name')]",
+    "StorageAccountName": "[concat(parameters('Name'), uniqueString(resourceGroup().id))]",
     "ImagePublisher": "MicrosoftWindowsServer",
     "ImageOffer": "WindowsServer",
-    "OSDiskName": "GenOSDisk",
-    "VmSize": "Standard_D2_v2",
+    "OSDiskName": "OSDisk",
     "VnetID": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
     "SubnetRef": "[concat(variables('VnetID'), '/subnets/', parameters('SubnetName'))]",
     "StorageAccountContainerName": "vhds",
@@ -80,27 +81,27 @@
   },
   "resources": [
     {
-      "name": "[variables('Name')]",
+      "name": "[variables('StorageAccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-01-01",
       "sku": {
         "name": "[parameters('StorageType')]"
       },
-      "dependsOn": [ ],
+      "dependsOn": [],
       "tags": {
-        "displayName": "[variables('Name')]"
+        "displayName": "[variables('StorageAccountName')]"
       },
       "kind": "Storage"
     },
     {
-      "name": "[variables('Name')]",
+      "name": "[variables('NicName')]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "westeurope",
       "apiVersion": "2016-03-30",
       "dependsOn": [ ],
       "tags": {
-        "displayName": "GenNic"
+        "displayName": "[variables('NicName')]"
       },
       "properties": {
         "ipConfigurations": [
@@ -109,7 +110,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[variables('GenSubnetRef')]"
+                "id": "[variables('SubnetRef')]"
               }
             }
           }
@@ -117,37 +118,37 @@
       }
     },
     {
-      "name": "[parameters('GenName')]",
+      "name": "[variables('VMName')]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
       "apiVersion": "2015-06-15",
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('genName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('GenNicName'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('NicName'))]"
       ],
       "tags": {
-        "displayName": "Gen"
+        "displayName": "[variables('VMName')]"
       },
       "properties": {
         "hardwareProfile": {
-          "vmSize": "[variables('GenVmSize')]"
+          "vmSize": "[parameters('HardwareProfile')]"
         },
         "osProfile": {
-          "computerName": "[parameters('GenName')]",
-          "adminUsername": "[parameters('GenAdminUsername')]",
-          "adminPassword": "[parameters('GenAdminPassword')]"
+          "computerName": "[parameters('Name')]",
+          "adminUsername": "[parameters('AdminUsername')]",
+          "adminPassword": "[parameters('AdminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
-            "publisher": "[variables('GenImagePublisher')]",
-            "offer": "[variables('GenImageOffer')]",
-            "sku": "[parameters('GenWindowsOSVersion')]",
+            "publisher": "[variables('ImagePublisher')]",
+            "offer": "[variables('ImageOffer')]",
+            "sku": "[parameters('WindowsOSVersion')]",
             "version": "latest"
           },
           "osDisk": {
-            "name": "GenOSDisk",
+            "name": "[variables('OSDiskName')]",
             "vhd": {
-              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('genName')), '2016-01-01').primaryEndpoints.blob, variables('GenStorageAccountContainerName'), '/', variables('GenOSDiskName'), '.vhd')]"
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName')), '2016-01-01').primaryEndpoints.blob, variables('StorageAccountContainerName'), '/', variables('OSDiskName'), '.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -156,7 +157,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('GenNicName'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('NicName'))]"
             }
           ]
         }
