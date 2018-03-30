@@ -52,6 +52,12 @@
       "metadata": {
         "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
       }
+    },
+    "_artifactsLocation": {
+      "type": "string"
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring"
     }
   },
   "variables": {
@@ -60,90 +66,43 @@
     "GWSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-GW')]",
     "DMZSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-DMZ')]",
     "LANSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-LAN')]",
-    "LanNsgName": "[concat(parameters('CustomerShort'),'-CS-CD-LAN-NSG')]",
-    "DmzNsgName": "[concat(parameters('CustomerShort'),'-CS-CD-DMZ-NSG')]"
-    },
+    "NestedTemplatesFolder": "nestedtemplates",
+    "LanNsgTemplateFileName": "LanNsg.json",
+    "LanNsgTemplateParametersFileName": "LanNsg.parameters.json",
+    "DmzNsgTemplateFileName": "DmzNsg.json",
+    "DmzNsgTemplateParametersFileName": "DmzNsg.parameters.json"
+  },
   "resources": [
     {
-      "apiVersion": "2017-03-01",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('DmzNsgName')]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "[variables('DmzNsgName')]"
-      },
+      "name": "LanNsg",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
       "properties": {
-        "securityRules": [
-          {
-            "name": "rdp-rule",
-            "properties": {
-              "description": "Allow RDP",
-              "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "3389",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 100,
-              "direction": "Inbound"
-            }
-          },
-          {
-            "name": "web-rule",
-            "properties": {
-              "description": "Allow WEB",
-              "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "80",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 101,
-              "direction": "Inbound"
-            }
-          }
-        ]
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('NestedTemplatesFolder'), '/', variables('LanNsgTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "CustomerShort": "parameters('CustomerShort')"
+        }
       }
     },
     {
-      "apiVersion": "2017-03-01",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('LanNsgName')]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "[variables('LanNsgName')]"
-      },
+      "name": "DmzNsg",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
       "properties": {
-        "securityRules": [
-          {
-            "name": "rdp-rule",
-            "properties": {
-              "description": "Allow RDP",
-              "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "3389",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 100,
-              "direction": "Inbound"
-            }
-          },
-          {
-            "name": "web-rule",
-            "properties": {
-              "description": "Allow WEB",
-              "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "80",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 101,
-              "direction": "Inbound"
-            }
-          }
-        ]
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('NestedTemplatesFolder'), '/', variables('DmzNsgTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "CustomerShort": "parameters('CustomerShort')"
+        }
       }
     },
     {
@@ -152,8 +111,8 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('DmzNsgName'))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('LanNsgName'))]"
+        "[concat('Microsoft.Network/networkSecurityGroups/', reference('DmzNsg').output.Name)]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', reference('LanNsg').output.Name)]"
       ],
       "tags": {
         "displayName": "Virtual network for [parameters('CustomerName')]"
@@ -182,7 +141,7 @@
             "properties": {
               "addressPrefix": "[parameters('DMZSubnetCIDR')]",
               "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('DmzNsgName'))]"
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', reference('DmzNsg').output.Name)]"
               }
             }
           },
@@ -191,7 +150,7 @@
             "properties": {
               "addressPrefix": "[parameters('LANSubnetCIDR')]",
               "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('LanNsgName'))]"
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', reference('LanNsg').output.Name)]"
               }
             }
           }

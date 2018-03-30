@@ -29,6 +29,10 @@
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
+    <Content Include="nestedtemplates\LanNsg.json" />
+    <Content Include="nestedtemplates\LanNsg.parameters.json" />
+    <Content Include="nestedtemplates\DmzNsg.json" />
+    <Content Include="nestedtemplates\DmzNsg.parameters.json" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>
