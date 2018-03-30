@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2005
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "GenVM2", "GenVM2\GenVM2.deployproj", "{80CDFD2F-A02A-41D4-8918-BD31D8FB2087}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{80CDFD2F-A02A-41D4-8918-BD31D8FB2087}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80CDFD2F-A02A-41D4-8918-BD31D8FB2087}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80CDFD2F-A02A-41D4-8918-BD31D8FB2087}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80CDFD2F-A02A-41D4-8918-BD31D8FB2087}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6CFB99B4-D934-4E5D-889D-5680E220987A}
+	EndGlobalSection
+EndGlobal

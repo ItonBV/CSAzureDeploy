@@ -1,0 +1,150 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "StorageType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "HardwareProfile": {
+
+    },
+    "Name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "AdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "AdminPassword": {
+      "type": "securestring"
+    },
+    "WindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2012-R2-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "2016-Datacenter",
+        "2016-Datacenter-Server-Core"
+      ]
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "defaultValue": "jnjnss-CS-CD-VNet1"
+    },
+    "SubnetName": {
+      "type": "string",
+      "defaultValue": "jnjnss-CS-CD-LAN"
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "defaultValue": "examplegroup"
+    }
+  },
+  "variables": {
+    "Name": "[concat('Name', uniqueString(resourceGroup().id))]",
+    "ImagePublisher": "MicrosoftWindowsServer",
+    "ImageOffer": "WindowsServer",
+    "OSDiskName": "GenOSDisk",
+    "VmSize": "Standard_D2_v2",
+    "VnetID": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "SubnetRef": "[concat(variables('VnetID'), '/subnets/', parameters('SubnetName'))]",
+    "StorageAccountContainerName": "vhds",
+    "NicName": "[concat(parameters('Name'), 'NetworkInterface')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('Name')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('StorageType')]"
+      },
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "[variables('Name')]"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "[variables('Name')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "westeurope",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "GenNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('GenSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('GenName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('genName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('GenNicName'))]"
+      ],
+      "tags": {
+        "displayName": "Gen"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('GenVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('GenName')]",
+          "adminUsername": "[parameters('GenAdminUsername')]",
+          "adminPassword": "[parameters('GenAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('GenImagePublisher')]",
+            "offer": "[variables('GenImageOffer')]",
+            "sku": "[parameters('GenWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "GenOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('genName')), '2016-01-01').primaryEndpoints.blob, variables('GenStorageAccountContainerName'), '/', variables('GenOSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('GenNicName'))]"
+            }
+          ]
+        }
+      }
+    }],
+  "outputs": {}
+}

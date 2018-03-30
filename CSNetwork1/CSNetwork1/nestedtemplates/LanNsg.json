@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "CustomerShort": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 6,
+      "metadata": {
+        "description": "The short name (6 char max) for this customer. Used for prefixes on objects/resources"
+      }
+    }
+  },
+  "variables": {
+    "LanNsgName": "[concat(parameters('CustomerShort'),'-CS-CD-LAN-NSG')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-03-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('LanNsgName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[variables('LanNsgName')]"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "rdp-rule",
+            "properties": {
+              "description": "Allow RDP",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "web-rule",
+            "properties": {
+              "description": "Allow WEB",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 101,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "Name": {
+      "value": "[variables('LanNsgName')]",
+      "type": "string"
+    }
+  }
+}
