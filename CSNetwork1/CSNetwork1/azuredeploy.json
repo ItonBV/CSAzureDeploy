@@ -85,7 +85,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "CustomerShort": "parameters('CustomerShort')"
+          "CustomerShort": {
+            "value": "[parameters('CustomerShort')]"
+          }            
         }
       }
     },
@@ -101,7 +103,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "CustomerShort": "parameters('CustomerShort')"
+          "CustomerShort": {
+            "value": "[parameters('CustomerShort')]"
+          }
         }
       }
     },
@@ -111,8 +115,8 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[concat('Microsoft.Network/networkSecurityGroups/', reference('DmzNsg').output.Name)]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', reference('LanNsg').output.Name)]"
+        "DmzNsg",
+        "LanNsg"
       ],
       "tags": {
         "displayName": "Virtual network for [parameters('CustomerName')]"
@@ -141,7 +145,7 @@
             "properties": {
               "addressPrefix": "[parameters('DMZSubnetCIDR')]",
               "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', reference('DmzNsg').output.Name)]"
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', reference('DmzNsg').outputs.Name.value)]"
               }
             }
           },
@@ -150,7 +154,7 @@
             "properties": {
               "addressPrefix": "[parameters('LANSubnetCIDR')]",
               "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', reference('LanNsg').output.Name)]"
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', reference('LanNsg').outputs.Name.value)]"
               }
             }
           }
