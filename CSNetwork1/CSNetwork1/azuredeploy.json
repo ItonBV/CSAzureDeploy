@@ -52,12 +52,6 @@
       "metadata": {
         "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
       }
-    },
-    "_artifactsLocation": {
-      "type": "string"
-    },
-    "_artifactsLocationSasToken": {
-      "type": "securestring"
     }
   },
   "variables": {
