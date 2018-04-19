@@ -76,7 +76,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[uri(deployment().templateLink.uri, variables('LanNsgTemplateFileName'))]",
+          "uri": "[uri(deployment().properties.templateLink.uri, variables('LanNsgTemplateFileName'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -94,7 +94,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[uri(deployment().templateLink.uri, variables('DmzNsgTemplateFileName'))]",
+          "uri": "[uri(deployment().properties.templateLink.uri, variables('DmzNsgTemplateFileName'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
