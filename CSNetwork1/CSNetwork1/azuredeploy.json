@@ -66,12 +66,12 @@
     "GWSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-GW')]",
     "DMZSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-DMZ')]",
     "LANSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-LAN')]",
-    "sharedTemplateUrl": "[uri(deployment().properties.templateLink.uri, 'shared-resources.json')]"
     "NestedTemplatesFolder": "nestedtemplates",
-    "LanNsgTemplateFileName": "LanNsg.json",
+    "LanNsgTemplateFileName": "nestedtemplates/LanNsg.json",
     "LanNsgTemplateParametersFileName": "LanNsg.parameters.json",
-    "DmzNsgTemplateFileName": "DmzNsg.json",
-    "DmzNsgTemplateParametersFileName": "DmzNsg.parameters.json"
+    "DmzNsgTemplateFileName": "nestedtemplates/DmzNsg.json",
+    "DmzNsgTemplateParametersFileName": "DmzNsg.parameters.json",
+    "Test" : "[concat(variables('NestedTemplatesFolder'), '/', variables('DmzNsgTemplateFileName'))]"
   },
   "resources": [
     {
@@ -82,7 +82,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('NestedTemplatesFolder'), '/', variables('LanNsgTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "uri": "[uri(deployment().templateLink.uri, variables('LanNsgTemplateFileName'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -98,7 +98,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('NestedTemplatesFolder'), '/', variables('DmzNsgTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "uri": "[uri(deployment().templateLink.uri, variables('DmzNsgTemplateFileName'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -110,7 +110,7 @@
       "name": "[variables('VNetName')]",
       "type": "Microsoft.Network/virtualNetworks",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2016-03-30",
+      "apiVersion": "2017-06-01",
       "dependsOn": [
         "[concat('Microsoft.Network/networkSecurityGroups/', reference('DmzNsg').output.Name.Value)]",
         "[concat('Microsoft.Network/networkSecurityGroups/', reference('LanNsg').output.Name.Value)]"
