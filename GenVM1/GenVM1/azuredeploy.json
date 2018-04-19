@@ -33,9 +33,10 @@
         "Standard_D15_v2"
       ]
     },
-    "Name": {
+    "ComputerName": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "maxLength": 15
     },
     "AdminUserName": {
       "type": "string",
@@ -69,15 +70,19 @@
     }
   },
   "variables": {
-    "VMName": "[parameters('Name')]",
-    "StorageAccountName": "[concat(parameters('Name'), uniqueString(resourceGroup().id))]",
+    "VMName": "[parameters('ComputerName')]",
+    "StorageAccountName": "[concat('sa', uniqueString(resourceGroup().id))]",
     "ImagePublisher": "MicrosoftWindowsServer",
     "ImageOffer": "WindowsServer",
     "OSDiskName": "OSDisk",
     "VnetID": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
     "SubnetRef": "[concat(variables('VnetID'), '/subnets/', parameters('SubnetName'))]",
+    "IPName": "[concat(parameters('ComputerName'), '-IP')]",
     "StorageAccountContainerName": "vhds",
-    "NicName": "[concat(parameters('Name'), 'NetworkInterface')]"
+    "NicName": "[concat(parameters('ComputerName'), '-NIC')]",
+    "NestedTemplatesFolder": "nestedTemplates",
+    "GetUniqueSATemplateFileName": "GetUniqueSA.json"
+
   },
   "resources": [
     {
@@ -97,16 +102,16 @@
     {
       "name": "[variables('NicName')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "westeurope",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
-      "dependsOn": [ ],
+      "dependsOn": [],
       "tags": {
         "displayName": "[variables('NicName')]"
       },
       "properties": {
         "ipConfigurations": [
           {
-            "name": "ipconfig1",
+            "name": "[variables('IPName')]",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
@@ -134,7 +139,7 @@
           "vmSize": "[parameters('HardwareProfile')]"
         },
         "osProfile": {
-          "computerName": "[parameters('Name')]",
+          "computerName": "[parameters('ComputerName')]",
           "adminUsername": "[parameters('AdminUsername')]",
           "adminPassword": "[parameters('AdminPassword')]"
         },
@@ -162,6 +167,7 @@
           ]
         }
       }
-    }],
+    }
+  ],
   "outputs": {}
 }

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "StorageAccountName": {
+      "type": "string",
+      "minLength": 1
+    },
+  },
+  "variables": {
+    "LongStorageAccountName": "[concat(parameters('StorageAccountName'), uniqueString(resourceGroup().id))]",
+    "SAName1": "[replace(variables('LongStorageAccountName'), '-' ,'')]",
+    "SAName2": "[replace(variables('SAName1'), '_' ,'')]",
+    "SANameLength": "[length(variables('SAName2'))]",
+    "MinValue": "[if(greater(variables('SANameLength'),24),24,variables('SANameLength'))]",
+    "StorageAccountName": "[substring(variables('SAName2'), 0, variables('MinValue'))]"
+  },
+  "resources": [],
+  "outputs": {
+    "UniqueStorageAccountName": {
+      "value": "[variables('StorageAccountName')]",
+      "type": "string"
+    }
+  }
+}

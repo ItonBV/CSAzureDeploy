@@ -66,6 +66,7 @@
     "GWSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-GW')]",
     "DMZSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-DMZ')]",
     "LANSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-LAN')]",
+    "sharedTemplateUrl": "[uri(deployment().properties.templateLink.uri, 'shared-resources.json')]"
     "NestedTemplatesFolder": "nestedtemplates",
     "LanNsgTemplateFileName": "LanNsg.json",
     "LanNsgTemplateParametersFileName": "LanNsg.parameters.json",
@@ -111,8 +112,8 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[concat('Microsoft.Network/networkSecurityGroups/', reference('DmzNsg').output.Name)]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', reference('LanNsg').output.Name)]"
+        "[concat('Microsoft.Network/networkSecurityGroups/', reference('DmzNsg').output.Name.Value)]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', reference('LanNsg').output.Name.Value)]"
       ],
       "tags": {
         "displayName": "Virtual network for [parameters('CustomerName')]"

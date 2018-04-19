@@ -1,0 +1,191 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "AdminUserName": {
+      "defaultValue": "vmadmin",
+      "type": "string",
+      "metadata": {
+        "description": "Administrator Username for the local admin account"
+      }
+    },
+    "AdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Administrator password for the local admin account"
+      }
+    },
+    "ComputerName": {
+      "type": "string",
+      "defaultValue": "VM",
+      "minLength": 1,
+      "maxLength": 15,
+      "metadata": {
+        "description": "Name of the virtual machine to be created"
+      }
+    },
+    "virtualMachineCount": {
+      "type": "int",
+      "defaultValue": 3,
+      "metadata": {
+        "description": "Number of  virtual machines to be created"
+      }
+    },
+    "virtualMachineSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS2_v2",
+      "allowedValues": [
+        "Standard_DS1_v2",
+        "Standard_DS2_v2",
+        "Standard_DS3_v2",
+        "Standard_DS4_v2",
+        "Standard_DS5_v2"
+      ],
+      "metadata": {
+        "description": "Virtual Machine Size"
+      }
+    },
+    "WindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter",
+      "allowedValues": [
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "2016-Datacenter",
+        "2016-Datacenter-Server-Core"
+      ],
+      "metadata": {
+        "description": "Operating System of the Server"
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "defaultValue": "jnjnss-CS-CD-VNet1"
+    },
+    "SubnetName": {
+      "type": "string",
+      "defaultValue": "jnjnss-CS-CD-LAN"
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "defaultValue": "examplegroup"
+    }
+  },
+  "variables": {
+    "VMName": "[parameters('ComputerName')]",
+    "StorageAccountName": "[concat('sa', uniqueString(resourceGroup().id))]",
+    "ImagePublisher": "MicrosoftWindowsServer",
+    "ImageOffer": "WindowsServer",
+    "OSDiskName": "OSDisk",
+    "VnetID": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "SubnetRef": "[concat(variables('VnetID'), '/subnets/', parameters('SubnetName'))]",
+    "IPName": "[concat(parameters('ComputerName'), '-IP')]",
+    "StorageAccountContainerName": "vhds",
+    "NicName": "[concat(parameters('ComputerName'), '-NIC')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('StorageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('StorageType')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[variables('StorageAccountName')]"
+      },
+      "kind": "Storage"
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('VMName'), copyIndex(1))]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "VMcopy",
+        "count": "[parameters('virtualMachineCount')]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('virtualMachineSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('ImagePublisher')]",
+            "offer": "[variables('ImageOffer')]",
+            "sku": "[parameters('WindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('virtualMachineNamePrefix'),copyIndex(1))]",
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            },
+            "caching": "ReadWrite"
+          }
+        },
+        "osProfile": {
+          "computerName": "[concat(parameters('ComputerName'),copyIndex(1))]",
+          "adminUsername": "[parameters('AdminUsername')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('AdminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachineNamePrefix'), copyIndex(1), '-NIC1'))]"
+            }
+          ]
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('diagnosticStorageAccountName')), '2016-01-01').primaryEndpoints.blob]"
+
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('VMName'), copyIndex(1), '-NIC1'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('VMName'), copyIndex(1), '-NIC1')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "NICCopy",
+        "count": "[parameters('virtualMachineCount')]"
+      },
+      "tags": {
+        "displayName": "[concat(variables('VMName'), copyIndex(1), '-NIC1')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "[concat(variables('VMName'), copyIndex(1), '-IP1')]",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      },
+      "dependsOn": []
+    }
+  ],
+    "outputs": {}
+  }
