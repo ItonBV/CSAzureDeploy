@@ -29,28 +29,35 @@
       "type": "string",
       "defaultValue": "172.16.0.0/29",
       "metadata": {
-        "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
+        "description": "CIDR based virtual network definition for this solution. Defaults to 29 mask bits"
       }
     },
     "GWSubnetCIDR": {
       "type": "string",
       "defaultValue": "172.16.0.8/29",
       "metadata": {
-        "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
+        "description": "CIDR based virtual network definition for this solution. Defaults to 29 mask bits"
+      }
+    },
+    "MGTSubnetCIDR": {
+      "type": "string",
+      "defaultValue": "172.16.0.64/26",
+      "metadata": {
+        "description": "CIDR based virtual network definition for this solution. Defaults to 29 mask bits"
       }
     },
     "DMZSubnetCIDR": {
       "type": "string",
       "defaultValue": "172.16.0.128/25",
       "metadata": {
-        "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
+        "description": "CIDR based virtual network definition for this solution. Defaults to 25 mask bits"
       }
     },
     "LANSubnetCIDR": {
       "type": "string",
       "defaultValue": "172.16.1.0/24",
       "metadata": {
-        "description": "CIDR based virtual network definition for this solution. Defaults to 23 mask bits"
+        "description": "CIDR based virtual network definition for this solution. Defaults to 24 mask bits"
       }
     }
   },
@@ -58,14 +65,14 @@
     "VNetName": "[concat(parameters('CustomerShort'),'-CS-CD-VNet1')]",
     "FWSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-FW')]",
     "GWSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-GW')]",
+    "MGTSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-MGT')]",
     "DMZSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-DMZ')]",
     "LANSubnetName": "[concat(parameters('CustomerShort'),'-CS-CD-LAN')]",
-    "NestedTemplatesFolder": "nestedtemplates",
-    "LanNsgTemplateFileName": "nestedtemplates/LanNsg.json",
+    "NestedTemplatesURI": "[uri(deployment().properties.templateLink.uri, 'nestedtemplates']",
+    "LanNsgTemplateFileName": "LanNsg.json",
     "LanNsgTemplateParametersFileName": "LanNsg.parameters.json",
-    "DmzNsgTemplateFileName": "nestedtemplates/DmzNsg.json",
+    "DmzNsgTemplateFileName": "DmzNsg.json",
     "DmzNsgTemplateParametersFileName": "DmzNsg.parameters.json",
-    "Test" : "[concat(variables('NestedTemplatesFolder'), '/', variables('DmzNsgTemplateFileName'))]"
   },
   "resources": [
     {
@@ -76,7 +83,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[uri(deployment().properties.templateLink.uri, variables('LanNsgTemplateFileName'))]",
+          "uri": "[concat(variables('NestedTemplatesURI'), '/', variables('LanNsgTemplateFileName'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -94,7 +101,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[uri(deployment().properties.templateLink.uri, variables('DmzNsgTemplateFileName'))]",
+          "uri": "[concat(variables('NestedTemplatesURI'), '/', variables('DmzNsgTemplateFileName'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -114,7 +121,7 @@
         "LanNsg"
       ],
       "tags": {
-        "displayName": "Virtual network for [parameters('CustomerName')]"
+        "displayName": "[concat('Virtual network for', parameters('CustomerName'))]"
       },
       "properties": {
         "addressSpace": {

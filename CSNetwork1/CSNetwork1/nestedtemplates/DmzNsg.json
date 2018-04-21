@@ -9,6 +9,20 @@
       "metadata": {
         "description": "The short name (6 char max) for this customer. Used for prefixes on objects/resources"
       }
+    },
+    "MGTSubnetCIDR": {
+      "type": "string",
+      "defaultValue": "172.16.0.64/26",
+      "metadata": {
+        "description": "CIDR based virtual network definition for this solution. Defaults to 29 mask bits"
+      }
+    },
+    "DMZSubnetCIDR": {
+      "type": "string",
+      "defaultValue": "172.16.0.128/25",
+      "metadata": {
+        "description": "CIDR based virtual network definition for this solution. Defaults to 25 mask bits"
+      }
     }
   },
   "variables": {
@@ -26,12 +40,11 @@
       "properties": {
         "securityRules": [
           {
-            "name": "rdp-rule",
+            "name": "AllowHttpInBound",
             "properties": {
-              "description": "Allow RDP",
-              "protocol": "Tcp",
+              "protocol": "*",
               "sourcePortRange": "*",
-              "destinationPortRange": "3389",
+              "destinationPortRange": "80",
               "sourceAddressPrefix": "Internet",
               "destinationAddressPrefix": "*",
               "access": "Allow",
@@ -40,17 +53,56 @@
             }
           },
           {
-            "name": "web-rule",
+            "name": "AllowHttpsInBound",
             "properties": {
-              "description": "Allow WEB",
-              "protocol": "Tcp",
+              "protocol": "*",
               "sourcePortRange": "*",
-              "destinationPortRange": "80",
+              "destinationPortRange": "443",
               "sourceAddressPrefix": "Internet",
               "destinationAddressPrefix": "*",
               "access": "Allow",
               "priority": 101,
               "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AllowRDPInBoundFromMGT",
+            "properties": {
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "[parameters('MgtSubnetCIDR')]",
+              "destinationAddressPrefix": "[parameters('DmzSubnetCIDR')]",
+              "access": "Allow",
+              "priority": 300,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AllowLocalSubnet",
+            "properties": {
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "[parameters('DmzSubnetCIDR')]",
+              "destinationAddressPrefix": "[parameters('DmzSubnetCIDR')]",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "denyVnetInBound",
+            "properties": {
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Deny",
+              "priority": 4096,
+              "direction": "Inbound",
+              "description": "deny InterVnet Traffic"
             }
           }
         ]
