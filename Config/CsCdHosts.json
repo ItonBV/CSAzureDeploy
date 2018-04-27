@@ -1,0 +1,91 @@
+[
+    {
+        "Name":  "DC1",
+        "NIC": [
+            {
+                "Index": 1,
+                "Network": {
+                        "Name": "Lan",
+                        "Position":  4
+                    }
+            }
+        ],
+        "Role":  [
+                       {
+                           "Name":  "ADDS"
+                       },
+                       {
+                           "Name":  "Ydentic"
+                       }
+                   ],
+        "Disk": [
+            {
+                "Number":  2
+            },
+            {
+                "Number":  3
+            }
+        ]
+    },
+    {
+        "Name":  "DC2",
+        "NIC": [
+            {
+                "Index": 1,
+                "Network": {
+                        "Name": "Lan",
+                        "Position":  5
+                    }
+            }
+        ]
+    },
+    {
+        "Name":  "RDB",
+        "NIC": [
+            {
+                "Index": 1,
+                "Network": {
+                        "Name": "Lan",
+                        "Position":  6
+                    }
+            }
+        ]
+    },
+    {
+        "Name":  "RDGI",
+        "NIC": [
+            {
+                "Index": 1,
+                "Network": {
+                        "Name": "Lan",
+                        "Position":  7
+                    }
+            }
+        ]
+    },
+    {
+        "Name":  "RDGE",
+        "NIC": [
+            {
+                "Index": 1,
+                "Network": {
+                        "Name": "Lan",
+                        "Position":  8
+                    }
+            }
+        ]
+    },
+    {
+        "Name":  "NPS",
+        "NIC": [
+            {
+                "Index": 1,
+                "Name": "Ethernet",
+                "Network": {
+                        "Name": "Lan",
+                        "Position":  9
+                    }
+            }
+        ]
+    }
+]
